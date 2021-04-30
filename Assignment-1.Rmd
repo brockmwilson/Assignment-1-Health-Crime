@@ -7,6 +7,8 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(pacman)
+p_load(here, rddensity)
 ```
 
 For this problem you will estimate a regression discontinuity design to test whether having a BAC over the legal limits. You can compare this to the paper by yours truly about DUI punishments we read earlier.
@@ -14,6 +16,13 @@ For this problem you will estimate a regression discontinuity design to test whe
 a. Create a histogram of the running variable, BAC. Make sure you do it allowing for discrete bins. Is there evidence of clear sorting at the threshold?
 
 #### Solution
+
+```{R}
+# Loading Data
+bac = read.csv(here("bac.csv"))
+
+# Histogram of BAC
+```
 
 b. Get the R package rddensity. Perform a density test on the running variable. Is there evidence of sorting?
 
