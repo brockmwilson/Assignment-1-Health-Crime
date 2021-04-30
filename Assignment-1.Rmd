@@ -8,7 +8,7 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(pacman)
-p_load(here, rddensity)
+p_load(here, rddensity, data.table)
 ```
 
 For this problem you will estimate a regression discontinuity design to test whether having a BAC over the legal limits. You can compare this to the paper by yours truly about DUI punishments we read earlier.
@@ -19,7 +19,7 @@ a. Create a histogram of the running variable, BAC. Make sure you do it allowing
 
 ```{R}
 # Loading Data
-bac = read.csv(here("bac.csv"))
+bac = data.table(read.csv(here("bac.csv")))
 
 # Histogram of BAC
 ```
