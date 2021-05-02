@@ -51,33 +51,105 @@ c. Next run a regression discontinuity model. To do so, create a dummy variable 
 bac$drunk = ifelse(bac$bac > 0.08, 1, 0)
 bac$rescaled_bac = bac$bac - 0.08
 
-bac$bac_bins = cut(bac$rescaled_bac, breaks = seq(-0.08, 0.355, 0.01))
+# Regressions to see if there is sorting on either side of the cutoff
+mod_aged = lm(data = bac, aged ~ drunk + rescaled_bac + drunk*rescaled_bac)
+mod_male = lm(data = bac, male ~ drunk + rescaled_bac + drunk*rescaled_bac)
+mod_acc = lm(data = bac, acc ~ drunk + rescaled_bac + drunk*rescaled_bac)
 
-bac_average_age = bac[, 
+bac$fitaged = predict(mod_aged)
+bac$fitmale = predict(mod_male)
+bac$fitacc = predict(mod_acc)
+
+# Binning
+
+bac$bac_bins = cut(bac$rescaled_bac, breaks = seq(-0.082, 0.36, 0.002), ordered_result = TRUE)
+
+bac_average = bac[, 
     lapply(.SD, mean, na.rm =TRUE),
-    .SDcols = c("aged","male","acc"),
+    .SDcols = c("aged","male","acc", "fitaged", "fitmale", "fitacc"),
     by = bac_bins]
 
+##################
+
+library(stringr)
+library(tidyr)
+bac_average = bac_average %>% separate((bac_bins), c("a", "b"),sep = ",")
+bac_average$cont_bin = as.numeric(str_sub(bac_average$a, start = 2))
+
 # Plots to visually see sorting
-ggplot(data = bac_average_age, aes(x = bac_bins, y = aged)) +
-  geom_boxplot()
+ggplot(data = bac_average, aes(x = cont_bin, y = aged)) +
+  geom_point(shape = 1) +
+  geom_line(data = bac_average[cont_bin < 0,], aes(y = fitaged), color = "red") +
+  geom_line(data = bac_average[cont_bin > 0,], aes(y = fitaged), color = "red") 
 
-ggplot(data = bac_average_age, aes(x = bac_bins, y = acc)) +
-  geom_boxplot()
+ggplot(data = bac_average, aes(x = cont_bin, y = acc)) +
+  geom_point(shape = 1) +
+  geom_line(data = bac_average[cont_bin < 0,], aes(y = fitacc), color = "red") +
+  geom_line(data = bac_average[cont_bin > 0,], aes(y = fitacc), color = "red") 
 
-ggplot(data = bac_average_age, aes(x = bac_bins, y = male)) +
-  geom_boxplot()
-
-# Regressions to see if there is sorting on either side of the cutoff
-summary(lm(data = bac, aged ~ drunk + rescaled_bac + drunk*rescaled_bac))
-summary(lm(data = bac, male ~ drunk + rescaled_bac + drunk*rescaled_bac))
-summary(lm(data = bac, acc ~ drunk + rescaled_bac + drunk*rescaled_bac))
-
+ggplot(data = bac_average, aes(x = cont_bin, y = male)) +
+  geom_point(shape = 1) +
+  geom_line(data = bac_average[cont_bin < 0,], aes(y = fitmale), color = "red") +
+  geom_line(data = bac_average[cont_bin > 0,], aes(y = fitmale), color = "red") 
 ```
 
 d. Now run a regression of recidivism on the same regression discontinuity design. What is your estimated effect using a bandwidth of .05, and a rectangular kernel (no weighting). Create a visualization of this by graphing the mean recidivism rate against the running variable. Show this for the whole BAC distribution, and the range from .03 to .13. Please include a fitted line.
 
 #### Solution
+
+```{R}
+
+bac2 = bac[rescaled_bac <= 0.05 & rescaled_bac >= -0.05,]
+
+mod_acc = (lm(data = bac[rescaled_bac <= 0.05 & rescaled_bac >= -0.05,], 
+           recidivism ~ drunk*rescaled_bac + aged + male + acc))
+
+mod_recid = (lm(data = bac2, 
+           recidivism ~ drunk*rescaled_bac))
+
+
+bac2$fitrecid = predict(mod_recid)
+
+#### Graphing mean recidivism
+
+# Binning
+
+bac$bac_bins = cut(bac$rescaled_bac, breaks = seq(-0.082, 0.36, 0.002), ordered_result = TRUE)
+bac2$bac_bins = cut(bac2$rescaled_bac, breaks = seq(-0.082, 0.36, 0.002), ordered_result = TRUE)
+
+bac_average = bac[, 
+    lapply(.SD, mean, na.rm =TRUE),
+    .SDcols = c("recidivism"),
+    by = bac_bins]
+
+bac_average2 = bac2[, 
+    lapply(.SD, mean, na.rm =TRUE),
+    .SDcols = c("fitrecid"),
+    by = bac_bins]
+
+#######
+for (x in seq(-0.082, 0.36, 0.002)) {
+  bac[rescaled_bac >= x & rescaled_bac < x + .002, bac_bin := x]
+}
+######
+library(stringr)
+library(tidyr)
+bac_average = bac_average %>% separate((bac_bins), c("a", "b"),sep = ",")
+bac_average$cont_bin = as.numeric(str_sub(bac_average$a, start = 2))
+
+bac_average2 = bac_average2 %>% separate((bac_bins), c("a", "b"),sep = ",")
+bac_average2$cont_bin = as.numeric(str_sub(bac_average2$a, start = 2))
+
+
+# Plots to visually see sorting
+ggplot(data = bac_average[cont_bin < 0.2], aes(x = cont_bin, y = recidivism)) +
+  geom_point(shape = 1) +
+  geom_line(data = bac_average2[cont_bin < 0,], aes(y = fitrecid), color = "red") +
+  geom_line(data = bac_average2[cont_bin > 0,], aes(y = fitrecid), color = "red") 
+
+bac_average
+
+```
 
 e. Do the same thing as part c and d but for the aggravated threshold of .151.
 
