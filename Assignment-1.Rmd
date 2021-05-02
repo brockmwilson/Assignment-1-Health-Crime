@@ -276,5 +276,29 @@ f. Now run this model for every possible bandwidth between .01 and .07. Store bo
 
 #### Solution
 
+```{R}
+
+rd_bw = function(bw){
+  bac2 = bac[rescaled_bac <= bw & rescaled_bac >= -bw,]
+  
+  mod_recid = (lm(data = bac2, 
+             recidivism ~ drunk_agg*rescaled_bac + aged + male + acc))
+  lower_bound = broom::tidy(mod_recid)[2,2] - 2* broom::tidy(mod_recid)[2,3]
+  upper_bound = broom::tidy(mod_recid)[2,2] + 2* broom::tidy(mod_recid)[2,3]
+  estimate = broom::tidy(mod_recid)[2,2] 
+  output = data.frame(bw, estimate, lower_bound, upper_bound)
+  return(output)
+}
+
+rd_bw(0.05)
+library(purrr)
+map_dfr(.x = seq(0.01, 0.07, 0.001), .f = rd_bw)
+
+# Plotting Estimates
+
+ggplot(data = output)
+
+```
+
 g. Finally, I want you to reestimate your models using instead of the .08 threshold, every other BAC as the threshold, keeping a bandwidth of .03, between .03 and .12 (i.e. .03, .031, .032, etc). Create a scatter plot of both the point estimates (yaxis) against the potential RD thresholds (x axis). Now create a scatter plot of your test statistic on the null hypothesis of your point estimates (z-stat/t-stat) with the test statistic on the y axis, and the threshold on the x axis. What is the rank of (1 being the largest) of your point estimate estimated at .08? How many estimates did you do? The rank divided by the number of tests is called an empirical pvalue based on a form of permutation inference.
 
