@@ -278,27 +278,92 @@ f. Now run this model for every possible bandwidth between .01 and .07. Store bo
 
 ```{R}
 
-rd_bw = function(bw){
+rd_bw = function(bw, threshold){
+  bac$rescaled_bac = bac$bac - threshold
+  bac$drunk = ifelse(bac$rescaled_bac > 0, 1, 0)
   bac2 = bac[rescaled_bac <= bw & rescaled_bac >= -bw,]
   
   mod_recid = (lm(data = bac2, 
-             recidivism ~ drunk_agg*rescaled_bac + aged + male + acc))
+             recidivism ~ drunk*rescaled_bac))
   lower_bound = broom::tidy(mod_recid)[2,2] - 2* broom::tidy(mod_recid)[2,3]
   upper_bound = broom::tidy(mod_recid)[2,2] + 2* broom::tidy(mod_recid)[2,3]
   estimate = broom::tidy(mod_recid)[2,2] 
-  output = data.frame(bw, estimate, lower_bound, upper_bound)
+  t_stat = broom::tidy(mod_recid)[2,4] 
+  output = data.frame(threshold, bw, estimate, lower_bound, upper_bound, t_stat)
   return(output)
 }
 
-rd_bw(0.05)
 library(purrr)
-map_dfr(.x = seq(0.01, 0.07, 0.001), .f = rd_bw)
 
+
+# Threshold = 0.08
+output = map_dfr(.x = seq(0.01, 0.07, 0.001), .f = rd_bw, threshold = 0.08)
+
+colnames(output) = c("threshold", "bw", "estimate", "lower_bound", "upper_bound", "t_stat")
 # Plotting Estimates
 
-ggplot(data = output)
+# Make it nice
+
+ggplot(data = output, aes(x = bw, y = estimate)) +
+  geom_line() +
+  geom_line(aes(y = upper_bound)) +
+  geom_line(aes(y = lower_bound))
+
+# Threshold = 0.151
+output2 = map_dfr(.x = seq(0.01, 0.07, 0.001), .f = rd_bw, threshold = 0.151)
+
+colnames(output2) = c("threshold", "bw", "estimate", "lower_bound", "upper_bound")
+# Plotting Estimates
+
+# Make it nice
+
+ggplot(data = output2, aes(x = bw, y = estimate)) +
+  geom_line() +
+  geom_line(aes(y = upper_bound)) +
+  geom_line(aes(y = lower_bound))
+
 
 ```
 
-g. Finally, I want you to reestimate your models using instead of the .08 threshold, every other BAC as the threshold, keeping a bandwidth of .03, between .03 and .12 (i.e. .03, .031, .032, etc). Create a scatter plot of both the point estimates (yaxis) against the potential RD thresholds (x axis). Now create a scatter plot of your test statistic on the null hypothesis of your point estimates (z-stat/t-stat) with the test statistic on the y axis, and the threshold on the x axis. What is the rank of (1 being the largest) of your point estimate estimated at .08? How many estimates did you do? The rank divided by the number of tests is called an empirical pvalue based on a form of permutation inference.
+g. Finally, I want you to reestimate your models using instead of the .08 threshold, every other BAC as the threshold, keeping a bandwidth of .03, between .03 and .12 (i.e. .03, .031, .032, etc). Create a scatter plot of both the point estimates (yaxis) against the potential RD thresholds (x axis). Now create a scatter plot of your test statistic on the null hypothesis of your point estimates (z-stat/t-stat) with the test statistic on the y axis, and the threshold on the x axis. What is the rank of (1 being the largest) of your point estimate estimated at .08? How many estimates did you do? The rank divided by the number of tests is called an empirical p-value based on a form of permutation inference.
+
+#### Solution:
+
+```{R}
+rd_bw2 = function(threshold, bw){
+  return(rd_bw(bw, threshold))
+}
+
+output_g = map_dfr(.x = seq(0.03, 0.12, 0.001), .f = rd_bw2, bw = 0.03)
+colnames(output_g) = c("threshold", "bw", "estimate", "lower_bound", "upper_bound", "t_stat")
+output_g
+# Plot of T Stats
+
+ggplot(data = output_g, aes(x = threshold, y = t_stat)) +
+  geom_line()
+
+# Plot of Estimates
+
+ggplot(data = output_g, aes(x = threshold, y = estimate)) +
+  geom_line()
+
+# Number of Permutations
+
+den = nrow(output_g)
+
+# Rank of 0.08 Threshold
+
+output_g$rank = rank(output_g$t_stat)
+output_g = data.table(output_g)
+num = output_g[threshold == 0.08, "rank"]
+
+# Permutation Test
+
+p_value = num/den
+
+p_value
+```
+
+
+
 
