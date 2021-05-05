@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 library(pacman)
 p_load(here, rddensity, data.table, ggplot2, modelsummary, magrittr,
        stringr, tidyr, purrr)
@@ -143,6 +143,8 @@ rd_plot(bac_average_08, quote(male), quote(fitmale), 0.08)+
 rd_plot(bac_average_08, quote(white), quote(fitwhite), 0.08)+
         labs(title = "White", y = "White") 
 ```
+
+
 There is evidence that individuals who had a BAC above the DUI threshold (BAC > 0.08) are slightly younger than those below the threshold. Otherwise, there is no evidence of differences in gender, accident at the scene, or race.  
 
 The results for age seem to be driven by observations at the high end of the BAC distribution, and would likely disappear if the data was censored to be within a reasonable bandwidth of the threshold.  
@@ -414,6 +416,12 @@ ggplot(data = bandwidth_15, aes(x = bw, y = estimate)) +
 
 
 ```
+ 
+ 
+The estimates are robust to bandwidth selection. All but the smallest bandwidths around the 0.08 threshold have a lower bound on their confidence intervals that is below zero, and the point estimates are stable. The lack of significance for the smaller bandwidths is being driven mostly by the smaller sample size that results in increased standard errors.  
+
+
+
 ### Part G
 
 **Finally, I want you to reestimate your models using instead of the .08 threshold, every other BAC as the threshold, keeping a bandwidth of .03, between .03 and .12 (i.e. .03, .031, .032, etc). Create a scatter plot of both the point estimates (yaxis) against the potential RD thresholds (x axis). Now create a scatter plot of your test statistic on the null hypothesis of your point estimates (z-stat/t-stat) with the test statistic on the y axis, and the threshold on the x axis. What is the rank of (1 being the largest) of your point estimate estimated at .08? How many estimates did you do? The rank divided by the number of tests is called an empirical p-value based on a form of permutation inference.**
