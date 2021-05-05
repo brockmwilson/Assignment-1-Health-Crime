@@ -1,0 +1,11 @@
+base
+pacman
+here
+rddensity
+data.table
+ggplot2
+modelsummary
+magrittr
+stringr
+tidyr
+purrr
