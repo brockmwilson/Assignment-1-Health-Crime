@@ -27,8 +27,8 @@ bac = data.table(read.csv(here("bac.csv")))
 # Histogram of BAC
 ggplot(data = bac, aes(x = bac)) +
   geom_histogram(binwidth = 0.001, alpha = 0.7) +
-  geom_vline(xintercept = 0.08, linetype = "dashed", color = "red") +
-  geom_vline(xintercept = 0.15, linetype = "dashed", color = "red") +
+  geom_vline(xintercept = 0.08, linetype = "dashed") +
+  geom_vline(xintercept = 0.15, linetype = "dashed") +
   labs(title ="BAC Histogram",
        x = "BAC",
        y = "Frequency") +
@@ -50,7 +50,7 @@ rd_dens_08 = rddensity(X = bac$bac, c = 0.08, kernel = "uniform")
 rd_dens_15 = rddensity(X = bac$bac, c = 0.15, kernel = "uniform")
 ```
 
-The density test does not provide evidence of sorting. For the 0.08 threshold, the t-stat is `r rd_dens_08$test[2]` with corresponding p-value of `r rd_dens_08$test[4]`. For the 0.15 threshold, the t-stat is `r rd_dens_15$test[2]` with corresponding p-value of `r rd_dens_15$test[4]`. Thus, in both cases we fail to reject the null hypothesis that there is no sorting.  
+The density test does not provide evidence of sorting. For the 0.08 threshold, the t-stat is `r round(rd_dens_08$test[[2]], digits = 3)` with corresponding p-value of `r round(rd_dens_08$test[[4]], digits = 3)`. For the 0.15 threshold, the t-stat is `r round(rd_dens_15$test[[2]], digits = 3)` with corresponding p-value of `r round(rd_dens_15$test[[4]], digits = 3)`. Thus, in both cases we fail to reject the null hypothesis that there is no sorting.  
 
 ### Part C
 
@@ -204,11 +204,11 @@ bac_avg = merge(bac_average_08,bac_average, by="bac_bins_08") %>%
 # Plotting the RD
 rd_plot(bac_avg, quote(recidivism), quote(fitrecid), 0.08) +
   xlim(0.03,0.13) + 
-  ylim(0.07,0.2) + 
+  ylim(0,0.4) + 
   labs(title = "Recidivism", y = "Recidivism")
 
 rd_plot(bac_avg, quote(recidivism), quote(fitrecid), 0.08) +
-  ylim(0.07,0.2) + 
+  ylim(0,0.4) + 
   labs(title = "Recidivism", y = "Recidivism")
 
 ```
@@ -340,11 +340,11 @@ bac_avg = merge(bac_average_15,bac_average, by="bac_bins_15") %>%
 # Plotting the RD
 rd_plot(bac_avg, quote(recidivism), quote(fitrecid_15), 0.15) +
   xlim(0.10,0.20) + 
-  ylim(0.07,0.2) + 
+  ylim(0,0.4) + 
   labs(title = "Recidivism", y = "Recidivism")
 
 rd_plot(bac_avg, quote(recidivism), quote(fitrecid_15), 0.15) +
-  ylim(0.07,0.2) + 
+  ylim(0,0.4) + 
   labs(title = "Recidivism", y = "Recidivism")
 ```
 
@@ -467,5 +467,5 @@ p_value = num/den
 ```
 
 The rank of the point estimate for a threshold of 0.08 is `r num`, where we have calculated `r den`
-estimates. This gives a p-value for the permutation test of `r p_value`. 
+estimates. This gives a p-value for the permutation test of `r round(p_value, digits = 3)`, providing statistical evidence that 0.08 is a real threshold in the data.    
 
