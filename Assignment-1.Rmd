@@ -31,7 +31,7 @@ bac = data.table(read.csv(here("bac.csv")))
 ggplot(data = bac, aes(x = bac)) +
   geom_histogram(binwidth = 0.001, alpha = 0.7) +
   geom_vline(xintercept = 0.08, linetype = "dashed") +
-  geom_vline(xintercept = 0.15, linetype = "dashed") +
+  geom_vline(xintercept = 0.151, linetype = "dashed") +
   labs(title ="BAC Histogram",
        x = "BAC",
        y = "Frequency") +
@@ -50,10 +50,10 @@ The histogram does not show evidence of sorting at either the 0.08 or 0.15 thres
 ```{r ptb}
 # Testing for sorting at both thresholds
 rd_dens_08 = rddensity(X = bac$bac, c = 0.08, kernel = "uniform")
-rd_dens_15 = rddensity(X = bac$bac, c = 0.15, kernel = "uniform")
+rd_dens_151 = rddensity(X = bac$bac, c = 0.151, kernel = "uniform")
 ```
 
-The density test does not provide evidence of sorting. For the 0.08 threshold, the t-stat is `r round(rd_dens_08$test[[2]], digits = 3)` with corresponding p-value of `r round(rd_dens_08$test[[4]], digits = 3)`. For the 0.15 threshold, the t-stat is `r round(rd_dens_15$test[[2]], digits = 3)` with corresponding p-value of `r round(rd_dens_15$test[[4]], digits = 3)`. Thus, in both cases we fail to reject the null hypothesis that there is no sorting.  
+The density test does not provide evidence of sorting. For the 0.08 threshold, the t-stat is `r round(rd_dens_08$test[[2]], digits = 3)` with corresponding p-value of `r round(rd_dens_08$test[[4]], digits = 3)`. For the 0.151 threshold, the t-stat is `r round(rd_dens_151$test[[2]], digits = 3)` with corresponding p-value of `r round(rd_dens_151$test[[4]], digits = 3)`. Thus, in both cases we fail to reject the null hypothesis that there is no sorting.  
 
 ### Part C
 
@@ -65,9 +65,9 @@ The density test does not provide evidence of sorting. For the 0.08 threshold, t
 # Creating indicator variables for BAC over thresholds and rescaling
 bac[,`:=`(
       drunk_08 = ifelse(bac > 0.08, 1, 0),
-      drunk_15 = ifelse(bac > 0.15, 1, 0),
+      drunk_151 = ifelse(bac > 0.151, 1, 0),
       rescaled_bac_08 = bac - 0.08,
-      rescaled_bac_15 = bac - 0.15 )
+      rescaled_bac_151 = bac - 0.151 )
 ]
 
 # Regressions to check if there are differences in observables near threshold
@@ -225,46 +225,46 @@ rd_plot(bac_avg, quote(recidivism), quote(fitrecid), 0.08) +
 #### Solution
 
 ```{r pte}
-obs_models_15 = list (
-  "Age" = lm(data = bac, aged ~ drunk_15*rescaled_bac_15),
-  "Male" = lm(data = bac, male ~ drunk_15*rescaled_bac_15),
-  "Accident" = lm(data = bac, acc ~ drunk_15*rescaled_bac_15),
-  "White" = lm(data = bac, white ~ drunk_15*rescaled_bac_15)
+obs_models_151 = list (
+  "Age" = lm(data = bac, aged ~ drunk_151*rescaled_bac_151),
+  "Male" = lm(data = bac, male ~ drunk_151*rescaled_bac_151),
+  "Accident" = lm(data = bac, acc ~ drunk_151*rescaled_bac_151),
+  "White" = lm(data = bac, white ~ drunk_151*rescaled_bac_151)
 )
 
 
 # Reporting regression results
 modelsummary(
-  obs_models_15,
+  obs_models_151,
   stars = TRUE,
-  coef_rename = c("drunk_15"="Aggr DUI Threshold", 
-                  "rescaled_bac_15"="BAC",
-                  "drunk_15:rescaled_bac_15" = "Aggr DUI × BAC"),
+  coef_rename = c("drunk_151"="Aggr DUI Threshold", 
+                  "rescaled_bac_151"="BAC",
+                  "drunk_151:rescaled_bac_151" = "Aggr DUI × BAC"),
   gof_omit = 'AIC|BIC|Log.Lik',
   #coef_omit = "Intercept",
   title = "Regression Discontinuity Estimates for the Impact of Exceeding Aggrevated DUI Threshold on Observable Characteristics"
 )
 
 # Adding the fitted values for age, gender, and accident
-bac$fitaged_15 = predict(obs_models_15[["Age"]])
-bac$fitmale_15 = predict(obs_models_15[["Male"]])
-bac$fitacc_15 = predict(obs_models_15[["Accident"]])
-bac$fitwhite_15 = predict(obs_models_15[["White"]])
+bac$fitaged_151 = predict(obs_models_151[["Age"]])
+bac$fitmale_151 = predict(obs_models_151[["Male"]])
+bac$fitacc_151 = predict(obs_models_151[["Accident"]])
+bac$fitwhite_151 = predict(obs_models_151[["White"]])
 
 
 # Binning
 binwidth = 0.002
 for (x in seq(-0.152, 0.29, binwidth)) {
-  bac[rescaled_bac_15 >= x & rescaled_bac_15 < x + binwidth, bac_bins_15 := x]
+  bac[rescaled_bac_151 >= x & rescaled_bac_151 < x + binwidth, bac_bins_151 := x]
 }
 
 # Calculating averages for observables by bin
-bac_average_15 = bac[, 
+bac_average_151 = bac[, 
     lapply(.SD, mean, na.rm =TRUE),
-    .SDcols = c("aged","male","acc","white", "fitaged_15", "fitmale_15", "fitacc_15","fitwhite_15"),
-    by = bac_bins_15]
+    .SDcols = c("aged","male","acc","white", "fitaged_151", "fitmale_151", "fitacc_151","fitwhite_151"),
+    by = bac_bins_151]
 
-bac_average_15[, cont_bin := bac_bins_15]
+bac_average_151[, cont_bin := bac_bins_151]
 
 
 # Function that will generate RD plots
@@ -281,16 +281,16 @@ rd_plot = function(data, dep_var, fit_var, threshold) {
 }
 
 # Age
-rd_plot(bac_average_15, quote(aged), quote(fitaged_15), 0.15)+
+rd_plot(bac_average_151, quote(aged), quote(fitaged_151), 0.151)+
         labs(title = "Age", y = "Age") 
 # Accident
-rd_plot(bac_average_15, quote(acc), quote(fitacc_15), 0.15)+
+rd_plot(bac_average_151, quote(acc), quote(fitacc_151), 0.151)+
         labs(title = "Accident at Scene", y = "Accident at Scene") 
 # Male
-rd_plot(bac_average_15, quote(male), quote(fitmale_15), 0.15)+
+rd_plot(bac_average_151, quote(male), quote(fitmale_151), 0.151)+
         labs(title = "Male", y = "Male") 
 # White
-rd_plot(bac_average_15, quote(white), quote(fitwhite_15), 0.15)+
+rd_plot(bac_average_151, quote(white), quote(fitwhite_151), 0.151)+
         labs(title = "White", y = "White") 
 
 ###############################################
@@ -298,55 +298,55 @@ rd_plot(bac_average_15, quote(white), quote(fitwhite_15), 0.15)+
 ###############################################
 
 # Censoring data using bandwidth of 0.05
-bac_censored_15 = bac[rescaled_bac_15 <= 0.05 & rescaled_bac_15 >= -0.05,]
+bac_censored_151 = bac[rescaled_bac_151 <= 0.05 & rescaled_bac_151 >= -0.05,]
 
 # Running RD models with and without controls
-rd_models_15 = list(
-  "No Controls" = lm(data = bac_censored_15, 
-           recidivism ~ drunk_15*rescaled_bac_15),
-  "With Controls" = lm(data = bac_censored_15, 
-           recidivism ~ drunk_15*rescaled_bac_15 + aged + male + acc)
+rd_models_151 = list(
+  "No Controls" = lm(data = bac_censored_151, 
+           recidivism ~ drunk_151*rescaled_bac_151),
+  "With Controls" = lm(data = bac_censored_151, 
+           recidivism ~ drunk_151*rescaled_bac_151 + aged + male + acc)
 )
 
 # Reporting regression results
 modelsummary(
-  rd_models_15,
+  rd_models_151,
   stars = TRUE,
-  coef_rename = c("drunk_15"="Aggr DUI Threshold", 
-                  "rescaled_bac_15"="BAC",
-                  "drunk_15:rescaled_bac_15" = "Aggr DUI × BAC"),
+  coef_rename = c("drunk_151"="Aggr DUI Threshold", 
+                  "rescaled_bac_151"="BAC",
+                  "drunk_151:rescaled_bac_151" = "Aggr DUI × BAC"),
   gof_omit = 'AIC|BIC|Log.Lik',
   #coef_omit = "Intercept",
   title = "Regression Discontinuity Estimates for the Impact of Exceeding Aggrevated DUI Threshold on Recidivism"
 )
 
 # Getting fitted values
-bac_censored_15$fitrecid_15 = predict(rd_models_15[["No Controls"]])
+bac_censored_151$fitrecid_151 = predict(rd_models_151[["No Controls"]])
 
 #### Graphing mean recidivism
 bac_average = bac[, 
     lapply(.SD, mean, na.rm =TRUE),
     .SDcols = c("recidivism"),
-    by = bac_bins_15]
+    by = bac_bins_151]
 
 # Fitted data
-bac_average2 = bac_censored_15[, 
+bac_average2 = bac_censored_151[, 
     lapply(.SD, mean, na.rm =TRUE),
-    .SDcols = c("fitrecid_15"),
-    by = bac_bins_15]
+    .SDcols = c("fitrecid_151"),
+    by = bac_bins_151]
 
 # Merging with rest of the data
-bac_avg = merge(bac_average_15,bac_average, by="bac_bins_15") %>%
-  merge(bac_average2, by="bac_bins_15", all.x = TRUE)
+bac_avg = merge(bac_average_151,bac_average, by="bac_bins_151") %>%
+  merge(bac_average2, by="bac_bins_151", all.x = TRUE)
 
 
 # Plotting the RD
-rd_plot(bac_avg, quote(recidivism), quote(fitrecid_15), 0.15) +
+rd_plot(bac_avg, quote(recidivism), quote(fitrecid_151), 0.151) +
   xlim(0.10,0.20) + 
   ylim(0,0.4) + 
   labs(title = "Recidivism", y = "Recidivism")
 
-rd_plot(bac_avg, quote(recidivism), quote(fitrecid_15), 0.15) +
+rd_plot(bac_avg, quote(recidivism), quote(fitrecid_151), 0.151) +
   ylim(0,0.4) + 
   labs(title = "Recidivism", y = "Recidivism")
 ```
@@ -402,12 +402,12 @@ ggplot(data = bandwidth_08, aes(x = bw, y = estimate)) +
 
 
 # Threshold = 0.151
-bandwidth_15 = map_dfr(.x = seq(0.01, 0.07, 0.001), .f = rd_bw, threshold = 0.151)
-colnames(bandwidth_15) = c("threshold", "bw", "estimate", "lower_bound", "upper_bound")
+bandwidth_151 = map_dfr(.x = seq(0.01, 0.07, 0.001), .f = rd_bw, threshold = 0.151)
+colnames(bandwidth_151) = c("threshold", "bw", "estimate", "lower_bound", "upper_bound")
 
 
 # Plotting Estimates
-ggplot(data = bandwidth_15, aes(x = bw, y = estimate)) +
+ggplot(data = bandwidth_151, aes(x = bw, y = estimate)) +
   geom_line() +
   geom_line(aes(y = upper_bound), linetype = "dashed") +
   geom_line(aes(y = lower_bound), linetype = "dashed") +
