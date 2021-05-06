@@ -83,8 +83,8 @@ obs_models_08 = list (
 modelsummary(
   obs_models_08,
   stars = TRUE,
-  coef_rename = c("drunk_08"="DUI Threshold", 
-                  "rescaled_bac_08"="BAC",
+  coef_rename = c("drunk_08" = "DUI Threshold", 
+                  "rescaled_bac_08" = "BAC",
                   "drunk_08:rescaled_bac_08" = "DUI × BAC"),
   gof_omit = 'AIC|BIC|Log.Lik',
   #coef_omit = "Intercept",
