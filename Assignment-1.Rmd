@@ -70,12 +70,20 @@ bac[,`:=`(
       rescaled_bac_151 = bac - 0.151 )
 ]
 
+# Binning
+binwidth = 0.002
+for (x in seq(-0.082, 0.36, binwidth)) {
+  bac[rescaled_bac_08 >= x & rescaled_bac_08 < x + binwidth, bac_bins_08 := x]
+}
+
+bac08 = bac[bac<0.151,]
+
 # Regressions to check if there are differences in observables near threshold
 obs_models_08 = list (
-  "Age" = lm(data = bac, aged ~ drunk_08*rescaled_bac_08),
-  "Male" = lm(data = bac, male ~ drunk_08*rescaled_bac_08),
-  "Accident" = lm(data = bac, acc ~ drunk_08*rescaled_bac_08),
-  "White" = lm(data = bac, white ~ drunk_08*rescaled_bac_08)
+  "Age" = lm(data = bac08, aged ~ drunk_08*rescaled_bac_08),
+  "Male" = lm(data = bac08, male ~ drunk_08*rescaled_bac_08),
+  "Accident" = lm(data = bac08, acc ~ drunk_08*rescaled_bac_08),
+  "White" = lm(data = bac08, white ~ drunk_08*rescaled_bac_08)
 )
 
 
@@ -92,17 +100,11 @@ modelsummary(
 )
 
 # Adding the fitted values for age, gender, and accident
-bac$fitaged = predict(obs_models_08[["Age"]])
-bac$fitmale = predict(obs_models_08[["Male"]])
-bac$fitacc = predict(obs_models_08[["Accident"]])
-bac$fitwhite = predict(obs_models_08[["White"]])
+bac08$fitaged = predict(obs_models_08[["Age"]])
+bac08$fitmale = predict(obs_models_08[["Male"]])
+bac08$fitacc = predict(obs_models_08[["Accident"]])
+bac08$fitwhite = predict(obs_models_08[["White"]])
 
-
-# Binning
-binwidth = 0.002
-for (x in seq(-0.082, 0.36, binwidth)) {
-  bac[rescaled_bac_08 >= x & rescaled_bac_08 < x + binwidth, bac_bins_08 := x]
-}
 
 #bac$bac_bins_08 = cut(
 #  x = bac$rescaled_bac_08, 
@@ -112,7 +114,7 @@ for (x in seq(-0.082, 0.36, binwidth)) {
 
 
 # Calculating averages for observables by bin
-bac_average_08 = bac[, 
+bac_average_08 = bac08[, 
     lapply(.SD, mean, na.rm =TRUE),
     .SDcols = c("aged","male","acc","white", "fitaged", "fitmale", "fitacc","fitwhite"),
     by = bac_bins_08]
@@ -225,11 +227,20 @@ rd_plot(bac_avg, quote(recidivism), quote(fitrecid), 0.08) +
 #### Solution
 
 ```{r pte}
+
+# Binning
+binwidth = 0.002
+for (x in seq(-0.152, 0.29, binwidth)) {
+  bac[rescaled_bac_151 >= x & rescaled_bac_151 < x + binwidth, bac_bins_151 := x]
+}
+
+bac151 = bac[bac>0.08,]
+
 obs_models_151 = list (
-  "Age" = lm(data = bac, aged ~ drunk_151*rescaled_bac_151),
-  "Male" = lm(data = bac, male ~ drunk_151*rescaled_bac_151),
-  "Accident" = lm(data = bac, acc ~ drunk_151*rescaled_bac_151),
-  "White" = lm(data = bac, white ~ drunk_151*rescaled_bac_151)
+  "Age" = lm(data = bac151, aged ~ drunk_151*rescaled_bac_151),
+  "Male" = lm(data = bac151, male ~ drunk_151*rescaled_bac_151),
+  "Accident" = lm(data = bac151, acc ~ drunk_151*rescaled_bac_151),
+  "White" = lm(data = bac151, white ~ drunk_151*rescaled_bac_151)
 )
 
 
@@ -246,20 +257,14 @@ modelsummary(
 )
 
 # Adding the fitted values for age, gender, and accident
-bac$fitaged_151 = predict(obs_models_151[["Age"]])
-bac$fitmale_151 = predict(obs_models_151[["Male"]])
-bac$fitacc_151 = predict(obs_models_151[["Accident"]])
-bac$fitwhite_151 = predict(obs_models_151[["White"]])
+bac151$fitaged_151 = predict(obs_models_151[["Age"]])
+bac151$fitmale_151 = predict(obs_models_151[["Male"]])
+bac151$fitacc_151 = predict(obs_models_151[["Accident"]])
+bac151$fitwhite_151 = predict(obs_models_151[["White"]])
 
-
-# Binning
-binwidth = 0.002
-for (x in seq(-0.152, 0.29, binwidth)) {
-  bac[rescaled_bac_151 >= x & rescaled_bac_151 < x + binwidth, bac_bins_151 := x]
-}
 
 # Calculating averages for observables by bin
-bac_average_151 = bac[, 
+bac_average_151 = bac151[, 
     lapply(.SD, mean, na.rm =TRUE),
     .SDcols = c("aged","male","acc","white", "fitaged_151", "fitmale_151", "fitacc_151","fitwhite_151"),
     by = bac_bins_151]
@@ -471,4 +476,6 @@ p_value = num/den
 
 The rank of the point estimate for a threshold of 0.08 is `r num`, where we have calculated `r den`
 estimates. This gives a p-value for the permutation test of `r round(p_value, digits = 3)`, providing statistical evidence that 0.08 is a real threshold in the data.    
+
+
 
