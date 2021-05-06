@@ -470,20 +470,3 @@ estimates. This gives a p-value for the permutation test of `r p_value`.
 
 
 
-----
-
-### Adding Discontinuities at 0.08 and 0.151
-
-```{R}
-ggplot(data = data, aes(x = cont_bin + threshold, y = eval(dep_var))) +
-        geom_point(shape = 1) +
-        geom_line(data = data[cont_bin < 0,], aes(y = eval(fit_var))) +
-        geom_line(data = data[cont_bin > 0,], aes(y = eval(fit_var))) + 
-        xlab("BAC")+
-        theme_classic() +
-        geom_vline(xintercept = threshold, linetype = "dashed")
-```
-
-
-
-
