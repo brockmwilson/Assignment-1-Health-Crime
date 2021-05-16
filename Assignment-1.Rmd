@@ -457,6 +457,18 @@ output_g = map_dfr(.x = seq(0.03, 0.12, 0.001), .f = rd_bw2, bw = 0.03)
 colnames(output_g) = c("threshold", "bw", "estimate", "lower_bound", "upper_bound", "t_stat")
 output_g = data.table(output_g)
 
+# Plot of point estimates
+ggplot(data = output_g, aes(x = threshold, y = estimate)) +
+  geom_point(shape = 1) + 
+  geom_point(data = output_g[t_stat > 1.96 | t_stat < -1.96], aes(x = threshold,y = estimate), color = "red", alpha = 0.8)+
+  #geom_hline(yintercept = mean(output_g[, estimate]), linetype = "dashed") +
+  geom_hline(yintercept = 0) +
+  ylim(-0.04,0.04)+
+  theme_classic() +
+  labs(title = "Point Estimates at Different Thresholds",
+       x = "BAC Threshold",
+       y = "Estimate")
+
 # Plot of T Stats
 ggplot(data = output_g, aes(x = threshold, y = t_stat)) +
   geom_point(shape = 1) + 
