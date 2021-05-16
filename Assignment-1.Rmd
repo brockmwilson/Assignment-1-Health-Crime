@@ -76,7 +76,9 @@ for (x in seq(-0.082, 0.36, binwidth)) {
   bac[rescaled_bac_08 >= x & rescaled_bac_08 < x + binwidth, bac_bins_08 := x]
 }
 
-bac08 = bac[bac<0.151,]
+bw = 0.05
+
+bac08 = bac[bac<0.08+bw & bac > 0.08-bw,]
 
 # Regressions to check if there are differences in observables near threshold
 obs_models_08 = list (
@@ -227,6 +229,12 @@ rd_plot(bac_avg, quote(recidivism), quote(fitrecid), 0.08) +
 #### Solution
 
 ```{r pte}
+bac[,`:=`(
+      drunk_08 = ifelse(bac > 0.08, 1, 0),
+      drunk_151 = ifelse(bac > 0.151, 1, 0),
+      rescaled_bac_08 = bac - 0.08,
+      rescaled_bac_151 = bac - 0.151 )
+]
 
 # Binning
 binwidth = 0.002
@@ -234,7 +242,8 @@ for (x in seq(-0.152, 0.29, binwidth)) {
   bac[rescaled_bac_151 >= x & rescaled_bac_151 < x + binwidth, bac_bins_151 := x]
 }
 
-bac151 = bac[bac>0.08,]
+bw = 0.05
+bac151 = bac[bac>0.151-bw & bac<0.151+bw,]
 
 obs_models_151 = list (
   "Age" = lm(data = bac151, aged ~ drunk_151*rescaled_bac_151),
