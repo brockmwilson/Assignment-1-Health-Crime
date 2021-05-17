@@ -152,10 +152,7 @@ rd_plot(bac_average_08, quote(white), quote(fitwhite), 0.08)+
 ```
 
 
-There is evidence that individuals who had a BAC above the DUI threshold (BAC > 0.08) are slightly younger than those below the threshold. Otherwise, there is no evidence of differences in gender, accident at the scene, or race.  
-
-The results for age seem to be driven by observations at the high end of the BAC distribution, and would likely disappear if the data was censored to be within a reasonable bandwidth of the threshold.  
-
+There is not evidence of sorting on the observable characteristics seen here, age, gender, accident at scene, or race, at the DUI threshold of 0.08.  
 
 ### Part D
 
@@ -487,16 +484,24 @@ ggplot(data = output_g, aes(x = threshold, y = t_stat)) +
 den = nrow(output_g)
 
 # Rank of 0.08 Threshold
-output_g$rank = rank(output_g$t_stat)
-num = output_g[threshold == 0.08, "rank"]
+output_g$rank_onesided = rank(output_g$t_stat)
+output_g$rank_twosided = rank(-abs(output_g$t_stat))
+
+num_onesided = output_g[threshold == 0.08, "rank_onesided"]
+num_twosided = output_g[threshold == 0.08, "rank_twosided"]
 
 # Permutation Test
-p_value = num/den
+p_value_onesided = num_onesided/den
+p_value_twosided = num_twosided/den
 
 ```
 
-The rank of the point estimate for a threshold of 0.08 is `r num`, where we have calculated `r den`
-estimates. This gives a p-value for the permutation test of `r round(p_value, digits = 3)`, providing statistical evidence that 0.08 is a real threshold in the data.    
+If the alternative hypothesis in question is that recidivism decreases at the threshold, then we can conduct a one sided test by ranking the t-stats created using different thresholds, with the smallest (most negative) being ranked the highest. In this case, the rank of the point estimate for a threshold of 0.08 is `r num_onesided`, where we have calculated `r den`
+estimates. This gives a p-value for the one-sided permutation test of `r round(p_value_onesided, digits = 3)`. 
+
+If the alternative hypothesis in question is that there is a change in recidivism at the threshold, then we can conduct a two sided test by ranking the absolute value of the t-stats created using different thresholds, with the largest being ranked the highest. In this case, the rank of the point estimate for a threshold of 0.08 is also `r num_twosided`. This gives a p-value for the two-sided permutation test of `r round(p_value_twosided, digits = 3)`. 
+
+Both of these cases provide evidence that the statistically measured effect is strongest at the 0.08 threshold relative to any other threshold within a 0.05 bandwidth.
 
 
 
